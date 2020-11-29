@@ -1,4 +1,6 @@
 # Pose-Ninja - Made with Posenet
-A game where you control a ninja with a objetive to defend his dojo treasure from shuriken coming from unknown places. Kinect like game, control the ninja with your head.
+A game made using P5.play and Posenet, character controlled with the webcam
 
-![](loading.gif)
+<p align="center">
+  ![](loading.gif)
+</p>
