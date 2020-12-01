@@ -30,6 +30,9 @@ var pixeledFont;
 //* FORÇAR LOOP DA MUSICA
 musicLoop = 0;
 
+//* BANCO DE DADOS
+var database, highscore;
+
 //! ===================================
 //!          FUNÇÃO PRELOAD
 //! ===================================
@@ -85,6 +88,51 @@ function preload(){
     //? CARREGAR POSENET
     poseNet = ml5.poseNet(video, { inputResolution: 161 }, modelReady);
     poseNet.on('pose', gotPoses);
+
+    //? FIREBASE
+    // Your web app's Firebase configuration
+    var firebaseConfig = {
+        apiKey: "AIzaSyCqlafRLMFz4aZs9MeMy-FnXlLuBIMkFHQ",
+        authDomain: "poseninjahighscore.firebaseapp.com",
+        databaseURL: "https://poseninjahighscore.firebaseio.com",
+        projectId: "poseninjahighscore",
+        storageBucket: "poseninjahighscore.appspot.com",
+        messagingSenderId: "172394970599",
+        appId: "1:172394970599:web:a31975b566ea44f9e45142"
+    };
+    // Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
+
+    database = firebase.database();
+
+    var ref = database.ref('scores');
+    ref.on('value', gotData, errData);
+}
+
+function gotData(data){
+    var scoresArray = data.val();
+    var keys = Object.keys(scoresArray);
+    console.log(keys);
+
+    /*
+    for(let i=0; i<keys.length; i++){
+        var k = keys[i];
+        var score = scoresArray[k].score;
+        console.log(score);
+    }
+    */
+
+    highscore = scoresArray[keys[0]].score;
+    for(let i=0; i<keys.length; i++){
+        var k = keys[i];
+        if(scoresArray[k].score > highscore) highscore = scoresArray[k].score;
+    }
+    console.log(highscore);
+}
+
+function errData(err){
+    console.log('Error!');
+    console.log(err);
 }
 
 //! ===================================
@@ -177,17 +225,23 @@ function draw(){
     //* ===================================
     //*                HUD
     //* ===================================
-    image(lifeImage[15-life], 0, 370);
-
     fill(255);
     textSize(25);
     textFont(pixeledFont);
-    //* Texto level
-    text(level, 65, 460);
-    //* Texto timer
-    text(timer, 180, 460);
-    //* Texto pontos
-    text(pontos, 280, 460);
+    if(life > 0){
+        image(lifeImage[15-life], 0, 370);
+        //* Texto level
+        text(level, 65, 460);
+        //* Texto timer
+        text(timer, 180, 460);
+        //* Texto pontos
+        text(pontos, 280, 460);
+    } else {
+        textSize(25);
+        //* Pontos e highscore
+        text("POINTS: " + pontos, 100, 420);
+        text("HIGHSCORE: " + highscore, 100, 460);
+    }
 }
 
 //! ===================================
@@ -230,6 +284,12 @@ function CoinRemove(shuriken){
         ninja.remove();
         music.stop();
         deathSound.play();
+
+        var data = {
+            score: pontos
+        }
+        var ref = database.ref('scores');
+        ref.push(data);
     }
     shuriken.remove();
     crash.play();
